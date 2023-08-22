@@ -93,6 +93,15 @@ workflow RIBOSEQ {
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     //
+    // SUBWORKFLOW: Uncompress and prepare reference genome files
+    //
+    PREPARE_GENOME (
+        params.fasta
+    )
+    ch_versions = ch_versions.mix(PREPARE_GENOME.out.versions)
+    ch_genome_fasta = PREPARE_GENOME.out.fasta
+
+    //
     // MODULE: Run FastQC
     //
     FASTQC (
