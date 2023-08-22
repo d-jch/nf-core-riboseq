@@ -93,6 +93,17 @@ workflow RIBOSEQ {
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     //
+    // MODULE: Concatenate FastQ files from same sample if required
+    //
+    CAT_FASTQ (
+        ch_fastq.multiple
+    )
+    .reads
+    .mix(ch_fastq.single)
+    .set { ch_cat_fastq }
+    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
+
+    //
     // SUBWORKFLOW: Uncompress and prepare reference genome files
     //
     PREPARE_GENOME (
