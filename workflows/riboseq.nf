@@ -74,10 +74,23 @@ workflow RIBOSEQ {
     INPUT_CHECK (
         file(params.input)
     )
+    .reads
+    .map {
+        meta, fastq ->
+            new_id = meta.id - ~/_T\d+/
+            read1  = fastq.subList(0, 1)
+            [ meta + [id: new_id] + [single_end: true], read1 ]
+    }
+    .groupTuple()
+    .branch {
+        meta, fastq ->
+            single  : fastq.size() == 1
+                return [ meta, fastq.flatten() ]
+            multiple: fastq.size() > 1
+                return [ meta, fastq.flatten() ]
+    }
+    .set { ch_fastq }
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    // TODO: OPTIONAL, you can use nf-validation plugin to create an input channel from the samplesheet with Channel.fromSamplesheet("input")
-    // See the documentation https://nextflow-io.github.io/nf-validation/samplesheets/fromSamplesheet/
-    // ! There is currently no tooling to help you write a sample sheet schema
 
     //
     // MODULE: Run FastQC
